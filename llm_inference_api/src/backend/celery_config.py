@@ -1,5 +1,8 @@
 from celery import Celery
 
+from backend.tasks import BatchProcessing
+
+
 def make_celery(app_name=__name__):
     return Celery(
         app_name,
@@ -13,3 +16,5 @@ celery.conf.update(
     task_always_eager=False,
     worker_pool='threads'
 )
+
+BatchProcessing = celery.register_task(BatchProcessing())

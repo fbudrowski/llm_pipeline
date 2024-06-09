@@ -4,7 +4,10 @@ version = "0.1.0"
 description = ""
 authors = ["Franek Budrowski <fbudrowski@gmail.com>"]
 readme = "README.md"
-packages = [{include = "api", from = "src"}]
+packages = [
+    {include = "backend", from = "src"},
+    {include = "frontend", from = "src"},
+]
 
 [tool.poetry.dependencies]
 python = "^3.10"
@@ -22,4 +25,4 @@ build-backend = "poetry.core.masonry.api"
 
 
 [tool.poetry.scripts]
-start = "api"
+start = "frontend:app"
