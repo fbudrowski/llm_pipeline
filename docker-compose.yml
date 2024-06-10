@@ -19,17 +19,21 @@ services:
       - CELERY_BROKER=redis://redis:6379/0
       - PATH="/home/poetry/venv/bin:/home/poetry/bin:/home/pyenv/bin:${PATH}"
       - POETRY_HOME=/home/poetry
+    deploy:
+      resources:
+        reservations:
+          devices:
+            - driver: nvidia
+              device_ids: ['1']
+              capabilities: [ gpu ]
 
   frontend:
     build:
       context: .
       dockerfile: llm_pipeline/Dockerfile-frontend
-    command: poetry run hypercorn frontend -w 2
+    command: poetry run hypercorn frontend -w 2 -b 0.0.0.0:8000
     ports:
       - "8000:8000"
-#      - "127.0.0.1:8000:8000"
-#    expose:
-#      - "8000"
     volumes:
       - ./llm_pipeline:/app
     depends_on:
@@ -59,8 +63,10 @@ services:
 
   redis:
     image: redis/redis-stack-server:latest
-    ports:
-      - "6579:6379"
+    expose:
+      - "6379"
+#    ports:
+#      - "6379:6379"
 
   grafana:
     image: grafana/grafana

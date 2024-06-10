@@ -30,6 +30,8 @@ COPY llm_pipeline/poetry.lock ./
 RUN poetry install --no-root --no-interaction --no-ansi
 RUN poetry install --no-root --no-interaction --no-ansi --extras "backend"
 
+RUN poetry run python -c "from transformers import AutoTokenizer, AutoModelForCausalLM; tokenizer = AutoTokenizer.from_pretrained('Qwen/Qwen2-1.5B-Instruct'); model = AutoModelForCausalLM.from_pretrained('Qwen/Qwen2-1.5B-Instruct')"
+
 RUN pyenv global 3.10.12
 
 # Copy the entire source code into the container

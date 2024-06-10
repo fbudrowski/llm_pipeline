@@ -1,9 +1,6 @@
-import torch.cuda
 from celery import Task
-from transformers import AutoTokenizer, AutoModelForCausalLM
 
 batch_data = []
-# batch_size = 4
 
 
 class BatchProcessing(Task):
@@ -15,11 +12,13 @@ class BatchProcessing(Task):
         self._initialized = False
 
     def run(self, data_batch: list[str]):
+        import torch.cuda
+        from transformers import AutoTokenizer, AutoModelForCausalLM
         if not self._initialized:
+            self._initialized = True
             self.device = "cuda" if torch.cuda.is_available() else 'cpu'
             self.tokenizer = AutoTokenizer.from_pretrained("Qwen/Qwen2-1.5B-Instruct")
             self.model = AutoModelForCausalLM.from_pretrained("Qwen/Qwen2-1.5B-Instruct").to(self.device)
-            self._initialized = True
 
         print(f"Got data {data_batch}")
 
