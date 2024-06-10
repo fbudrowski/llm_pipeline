@@ -1,0 +1,35 @@
+FROM python:3.10.12
+#FROM nvidia/cuda:12.5.0-devel-ubuntu22.04
+
+# Set the working directory in the container
+WORKDIR /app
+
+RUN apt update
+RUN apt install curl -y
+
+RUN mkdir /home/poetry
+RUN curl -sSL https://install.python-poetry.org | POETRY_HOME=/home/poetry python3 -
+
+# Add Poetry to the system PATH
+ENV PATH="/home/poetry:/home/poetry/venv/bin:${PATH}"
+
+RUN poetry config virtualenvs.prefer-active-python true
+RUN poetry config virtualenvs.create false
+
+
+
+# Copy the poetry files and install dependencies
+COPY llm_pipeline/pyproject.toml ./
+#COPY frontend/poetry.lock ./
+RUN poetry install --no-root --no-interaction --no-ansi --extras "frontend"
+
+# Copy the entire source code into the container
+COPY llm_pipeline/ ./
+
+RUN poetry install --extras "frontend"
+
+# Expose ports
+#EXPOSE 8000
+
+# Command to run the frontend server
+CMD ["poetry", "run", "hypercorn", "frontend", "-w", "2"]

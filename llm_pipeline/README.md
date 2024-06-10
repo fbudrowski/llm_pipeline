@@ -1,10 +1,12 @@
-To test the first version, open three terminals, and `cd llm_inference_api` in all. Do the following in terminal 1:
+To test the first version, open three terminals. Do the following in terminal 1:
 ```bash
+cd frontend
 poetry run hypercorn frontend -w 2
 ```
 
 In terminal 2, do the following:
 ```bash
+cd backend
 poetry run celery -A backend.celery_config worker --loglevel=info
 ```
 

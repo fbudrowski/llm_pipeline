@@ -1,0 +1,70 @@
+version: '3'
+
+services:
+  backend:
+    build:
+      context: .
+      dockerfile: llm_pipeline/Dockerfile-backend
+    command: bash -c "
+      pyenv global 3.10.12
+      && poetry config virtualenvs.prefer-active-python true
+      && poetry config virtualenvs.create false
+      && poetry run celery -A backend.celery_config worker --loglevel=info"
+    volumes:
+      - ./llm_pipeline:/app
+    depends_on:
+      - redis
+    environment:
+      - CELERY_BACKEND=redis://redis:6379/0
+      - CELERY_BROKER=redis://redis:6379/0
+      - PATH="/home/poetry/venv/bin:/home/poetry/bin:/home/pyenv/bin:${PATH}"
+      - POETRY_HOME=/home/poetry
+
+  frontend:
+    build:
+      context: .
+      dockerfile: llm_pipeline/Dockerfile-frontend
+    command: poetry run hypercorn frontend -w 2
+    ports:
+      - "8000:8000"
+#      - "127.0.0.1:8000:8000"
+#    expose:
+#      - "8000"
+    volumes:
+      - ./llm_pipeline:/app
+    depends_on:
+      - backend
+      - grafana
+      - redis
+      - prometheus
+    environment:
+      - CELERY_BACKEND=redis://redis:6379/0
+      - CELERY_BROKER=redis://redis:6379/0
+      - PATH="/home/poetry/venv/bin:/home/poetry/bin:/home/pyenv/bin:${PATH}"
+      - POETRY_HOME=/home/poetry
+
+  prometheus:
+    image: prom/prometheus
+    ports:
+      - "9090:9090"
+    volumes:
+      - ./llm_pipeline:/app
+    command:
+      - --config.file=/app/prometheus.yml
+
+#  redis:
+#    image: redis
+#    ports:
+#      - "6579:6379"
+
+  redis:
+    image: redis/redis-stack-server:latest
+    ports:
+      - "6579:6379"
+
+  grafana:
+    image: grafana/grafana
+    ports:
+      - "3000:3000"
+    environment:
+      - GF_SECURITY_ADMIN_PASSWORD=admin

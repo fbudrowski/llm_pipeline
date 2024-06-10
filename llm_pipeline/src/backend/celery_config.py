@@ -1,4 +1,5 @@
 from celery import Celery
+import os
 
 from backend.tasks import BatchProcessing
 
@@ -6,8 +7,8 @@ from backend.tasks import BatchProcessing
 def make_celery(app_name=__name__):
     return Celery(
         app_name,
-        backend='redis://localhost:6379/0',
-        broker='redis://localhost:6379/0'
+        backend=os.environ.get("CELERY_BACKEND", 'redis://localhost:6579/0'),
+        broker=os.environ.get("CELERY_BROKER", 'redis://localhost:6579/0'),
     )
 
 celery = make_celery()

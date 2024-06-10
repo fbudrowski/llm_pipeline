@@ -1,0 +1,7 @@
+global:
+  scrape_interval: 45s
+
+scrape_configs:
+  - job_name: 'frontend'
+    static_configs:
+      - targets: ['frontend:8000']

@@ -1,0 +1,44 @@
+FROM huggingface/transformers-pytorch-gpu:4.41.2
+#FROM nvidia/cuda:12.5.0-devel-ubuntu22.04
+
+# Set the working directory in the container
+WORKDIR /app
+
+RUN apt update
+RUN apt install -y build-essential libssl-dev zlib1g-dev libbz2-dev libreadline-dev libsqlite3-dev curl git libncursesw5-dev xz-utils tk-dev libxml2-dev libxmlsec1-dev libffi-dev liblzma-dev
+RUN apt install curl -y
+
+ENV PYENV_ROOT="/home/pyenv"
+RUN curl https://pyenv.run | bash
+ENV PATH="/home/pyenv/bin:${PATH}"
+RUN pyenv install 3.10.12 && pyenv global 3.10.12
+ENV PATH="/home/pyenv/versions/3.10.12/bin:${PATH}"
+
+
+RUN mkdir /home/poetry
+RUN curl -sSL https://install.python-poetry.org | POETRY_HOME=/home/poetry python3 -
+ENV PATH="/home/poetry:/home/poetry/venv/bin:${PATH}"
+RUN poetry config virtualenvs.prefer-active-python true
+RUN poetry config virtualenvs.create false
+
+
+
+# Copy the poetry files and install dependencies
+COPY llm_pipeline/pyproject.toml ./
+COPY llm_pipeline/poetry.lock ./
+
+RUN poetry install --no-root --no-interaction --no-ansi
+RUN poetry install --no-root --no-interaction --no-ansi --extras "backend"
+
+RUN pyenv global 3.10.12
+
+# Copy the entire source code into the container
+COPY llm_pipeline/ ./
+
+RUN poetry install --extras "backend"
+
+# Expose ports
+#EXPOSE 8000
+
+# Command to run the frontend server
+CMD ["poetry", "run", "hypercorn", "frontend", "-w", "2"]
